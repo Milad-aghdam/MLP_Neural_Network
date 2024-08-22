@@ -12,7 +12,7 @@ def main():
     output_size = 2   # Example value (e.g., binary classification)
     learning_rate = 0.001
     batch_size = 64
-    num_epochs = 10
+    num_epochs = 30
 
     # 2. Load Dataset
     dataset_path = './data_for_uci_named/Dataset/Data_for_UCI_named.csv'
