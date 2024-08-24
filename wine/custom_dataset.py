@@ -48,7 +48,3 @@ class CustomDataset(Dataset):
     def __getitem__(self, index):
         return self.x[index], self.y[index]
 
-path1 = "./wine/Dataset/winequality-red.csv"
-path2 = "./wine/Dataset/winequality-white.csv"
-train_dataset = CustomDataset(path1, path2, train=True, scaler=StandardScaler())
-val_dataset = CustomDataset(path1, path2, train=False, scaler=StandardScaler())

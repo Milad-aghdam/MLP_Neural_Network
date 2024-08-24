@@ -4,6 +4,8 @@ from torch.utils.data import DataLoader, random_split
 from custom_dataset import CustomDataset
 from custom_model import MLP
 import matplotlib.pyplot as plt
+from sklearn.preprocessing import StandardScaler
+
 
 def main():
     # 1. Hyperparameters
@@ -16,7 +18,7 @@ def main():
 
     # 2. Load Dataset
     dataset_path = './data_for_uci_named/Dataset/Data_for_UCI_named.csv'
-    full_dataset = CustomDataset(dataset_path)  # Initialize the dataset
+    full_dataset = CustomDataset(dataset_path, StandardScaler())  # Initialize the dataset
 
     # Calculate dataset length
     dataset_length = len(full_dataset)
