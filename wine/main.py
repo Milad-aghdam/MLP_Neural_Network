@@ -6,6 +6,8 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from custom_dataset import CustomDataset  
 from model import MLP  
+import matplotlib.pyplot as plt
+
 
 
 # Hyperparameters
@@ -14,8 +16,8 @@ hidden_size = 64  # Number of neurons in the hidden layer
 output_size = 3  # Number of classes (bad, medium, good)
 learning_rate = 0.001
 batch_size = 64
-num_epochs = 100
-dropout_prob = 0.6
+num_epochs = 10
+dropout_prob = 0
 
 # Define paths to the dataset
 path1 = "./wine/Dataset/winequality-red.csv"
@@ -23,24 +25,28 @@ path2 = "./wine/Dataset/winequality-white.csv"
 
 # Initialize the CustomDataset with paths
 scaler = StandardScaler()
-# train_dataset = CustomDataset(path1, path2, train=True, scaler=scaler)
-# val_dataset = CustomDataset(path1, path2, train=False, scaler=scaler)
 
 full_dataset = CustomDataset(path1, path2,  scaler)  # Initialize the dataset
 dataset_length = len(full_dataset)
 
-train_size = int(0.7 * dataset_length)  # 70% for training
-val_size = int(0.15 * dataset_length)    # 15% for validation
-test_size = dataset_length - train_size - val_size  # Remaining 15% for testing
+train_dataset = CustomDataset(path1, path2, scaler=scaler, mode='train')
+print("train_dataset",train_dataset[0][0]) 
+val_dataset = CustomDataset(path1, path2, scaler=scaler, mode='val')
+test_dataset = CustomDataset(path1, path2, scaler=scaler, mode='test')
 
-train_dataset, val_dataset, test_dataset = random_split(full_dataset, [train_size, val_size, test_size])
-
+# Create DataLoaders
 train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
-val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
-test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
+val_loader = DataLoader(val_dataset, batch_size=20, shuffle=False)
+test_loader = DataLoader(test_dataset, batch_size=20, shuffle=False)
+
+# Define class weights for imbalance handling
+class_counts = [30, 5190, 1277]
+total_samples = sum(class_counts)
+class_weights = [total_samples / class_count for class_count in class_counts]
+class_weights = torch.tensor(class_weights, dtype=torch.float32)
 
 model = MLP(input_size, hidden_size, output_size, dropout_prob)
-criterion = nn.CrossEntropyLoss()
+criterion = nn.CrossEntropyLoss(weight=class_weights)
 optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 
 # Initialize lists to store loss and accuracy values
@@ -49,8 +55,8 @@ val_losses = []
 train_accuracies = []
 val_accuracies = []
 
-
-for epock in range(num_epochs):
+# Training loop
+for epoch in range(num_epochs):
     model.train()  # Set model to training mode
     running_loss = 0.0
     correct = 0
@@ -61,82 +67,80 @@ for epock in range(num_epochs):
         loss = criterion(y_hat, y_batch)
 
         # Backward pass and optimization
-        optimizer.zero_grad()
-        loss.backward()
         optimizer.step()
-        running_loss += loss.item() * x_batch.size(0)  # Multiply by batch size
-     
+        
+        running_loss += loss.item() * x_batch.size(0)
         _, predicted = torch.max(y_hat.data, 1)
         total += y_batch.size(0)
-        correct += (predicted == y_batch).sum().item()
-            # Average loss and accuracy for the epoch
+        correct += (predicted == y_batch).sum().item()  # Multiply by batch size
+     
+    
     avg_train_loss = running_loss / len(train_loader.dataset)
     train_accuracy = 100 * correct / total
-
     train_losses.append(avg_train_loss)
     train_accuracies.append(train_accuracy)
 
+# Validation
+    model.eval()  # Set model to evaluation mode
+    val_running_loss = 0.0
+    val_correct = 0
+    val_total = 0
 
+    with torch.no_grad():
+        for x_batch, y_batch in val_loader:
+            y_hat = model(x_batch)
+            loss = criterion(y_hat, y_batch)
 
-# # Create DataLoaders for batch processing
-# train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
-# val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
+            # Calculate running loss
+            val_running_loss += loss.item() * x_batch.size(0)  # Multiply by batch size
 
-# # Initialize the model
-# model = MLP(input_size, hidden_size, output_size, dropout_prob)
+            # Calculate accuracy
+            _, predicted = torch.max(y_hat.data, 1)
+            val_total += y_batch.size(0)
+            val_correct += (predicted == y_batch).sum().item()
 
-# # Define the loss function
-# criterion = nn.CrossEntropyLoss()
+    avg_val_loss = val_running_loss / len(val_loader.dataset)
+    val_accuracy = 100 * val_correct / val_total
 
-# # Define the optimizer
+    val_losses.append(avg_val_loss)
+    val_accuracies.append(val_accuracy)
 
+    print(f'Epoch [{epoch+1}/{num_epochs}], '
+            f'Train Loss: {avg_train_loss:.4f}, Train Accuracy: {train_accuracy:.2f}%, '
+            f'Val Loss: {avg_val_loss:.4f}, Val Accuracy: {val_accuracy:.2f}%')
 
+plt.figure(figsize=(12, 6))
 
-# # Training loop
-# for epoch in range(num_epochs):
-#     model.train()  # Set the model to training mode
-#     train_loss = 0
-#     correct_train = 0
-#     total_train = 0
+# Plot training and validation loss
+plt.subplot(1, 2, 1)  # 1 row, 2 columns, 1st subplot
+plt.plot(range(1, num_epochs + 1), train_losses, label='Training Loss')
+plt.plot(range(1, num_epochs + 1), val_losses, label='Validation Loss')
+plt.title('Training and Validation Loss')
+plt.xlabel('Epochs')
+plt.ylabel('Loss')
+plt.legend()
 
-#     for x_batch, y_batch in train_loader:
-#         # Forward pass
-#         outputs = model(x_batch)
-#         loss = criterion(outputs, y_batch)
-        
-#         # Backward pass and optimization
-#         optimizer.zero_grad()
-#         loss.backward()
-#         optimizer.step()
+# Plot training and validation accuracy
+plt.subplot(1, 2, 2)  # 1 row, 2 columns, 2nd subplot
+plt.plot(range(1, num_epochs + 1), train_accuracies, label='Training Accuracy')
+plt.plot(range(1, num_epochs + 1), val_accuracies, label='Validation Accuracy')
+plt.title('Training and Validation Accuracy')
+plt.xlabel('Epochs')
+plt.ylabel('Accuracy (%)')
+plt.legend()
 
-#         train_loss += loss.item()
-#         _, predicted = torch.max(outputs.data, 1)
-#         total_train += y_batch.size(0)
-#         correct_train += (predicted == y_batch).sum().item()
+plt.tight_layout()
+plt.show()
+    # 6. Evaluation (optional)
+model.eval()  # Set model to evaluation mode
+correct = 0
+total = 0
+with torch.no_grad():
+    for x_batch, y_batch in test_loader:
+        outputs = model(x_batch)
+        _, predicted = torch.max(outputs.data, 1)
+        total += y_batch.size(0)
+        correct += (predicted == y_batch).sum().item()
 
-#     train_accuracy = 100 * correct_train / total_train
-    
-#     # Validation loop
-#     model.eval()  # Set the model to evaluation mode
-#     val_loss = 0
-#     correct_val = 0
-#     total_val = 0
-
-#     with torch.no_grad():
-#         for x_batch, y_batch in val_loader:
-#             outputs = model(x_batch)
-#             loss = criterion(outputs, y_batch)
-            
-#             val_loss += loss.item()
-#             _, predicted = torch.max(outputs.data, 1)
-#             total_val += y_batch.size(0)
-#             correct_val += (predicted == y_batch).sum().item()
-
-#     val_accuracy = 100 * correct_val / total_val
-
-#     # Print epoch statistics
-#     print(f'Epoch [{epoch+1}/{num_epochs}], '
-#           f'Train Loss: {train_loss / len(train_loader):.4f}, '
-#           f'Train Accuracy: {train_accuracy:.2f}%, '
-#           f'Val Loss: {val_loss / len(val_loader):.4f}, '
-#           f'Val Accuracy: {val_accuracy:.2f}%')
+test_accuracy = 100 * correct / total
+print(f'Accuracy on test data: {test_accuracy:.2f}%')
