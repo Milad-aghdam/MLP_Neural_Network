@@ -5,20 +5,19 @@ from torch.utils.data import DataLoader, random_split
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from custom_dataset import CustomDataset  
-from model import MLP  
+from model import MLP, SimpleMLP
 import matplotlib.pyplot as plt
+import torch.optim.lr_scheduler as lr_scheduler
 
 
 
-# Hyperparameters
-input_size = 12  # Number of features (excluding 'quality')
-hidden_size = 64  # Number of neurons in the hidden layer
-output_size = 3  # Number of classes (bad, medium, good)
-learning_rate = 0.001
-batch_size = 64
-num_epochs = 10
-dropout_prob = 0
-
+input_size = 12  # Assuming 12 features in the dataset
+hidden_size1 = 128
+hidden_size2 = 64
+output_size = 3  # 3 classes: bad, medium, good
+learning_rate = 0.001  # A reasonable learning rate to start with
+batch_size = 32  # Commonly used batch size
+num_epochs = 50  # Enough epochs to observe learning
 # Define paths to the dataset
 path1 = "./wine/Dataset/winequality-red.csv"
 path2 = "./wine/Dataset/winequality-white.csv"
@@ -45,9 +44,11 @@ total_samples = sum(class_counts)
 class_weights = [total_samples / class_count for class_count in class_counts]
 class_weights = torch.tensor(class_weights, dtype=torch.float32)
 
-model = MLP(input_size, hidden_size, output_size, dropout_prob)
+model = MLP(input_size, hidden_size1, hidden_size2, output_size)
 criterion = nn.CrossEntropyLoss(weight=class_weights)
 optimizer = optim.Adam(model.parameters(), lr=learning_rate)
+scheduler = lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=5, factor=0.5)
+
 
 # Initialize lists to store loss and accuracy values
 train_losses = []

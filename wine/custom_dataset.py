@@ -20,7 +20,7 @@ class CustomDataset(Dataset):
 
         # Map quality to categories (0: bad, 1: medium, 2: good)
         df['type_quality'] = pd.cut(df['quality'], bins=[0, 3, 6, 9], labels=[0, 1, 2])
-
+        print('data frame shape:', df.shape)
         # Features (X) and target (y)
         x = df.drop(columns=['type_quality', 'quality']).values  # Keep 'type' in the features
         y = df['type_quality'].values
