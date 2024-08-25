@@ -1,4 +1,6 @@
 import pandas as pd
+from sklearn.preprocessing import OrdinalEncoder
+
 
 class CustomDataset:
     def __init__(self, path):
@@ -23,10 +25,10 @@ class CustomDataset:
         print("New shape after dropping columns: ", data.shape)
 
         # split data by data type 
-        catogorical_column = [column for column in data.columns if data[column].dtype == 'object']
-        print(catogorical_column)
+        categorical_columns = [column for column in data.columns if data[column].dtype == 'object']
+        print(categorical_columns)
 
-        mode_of_columns = {column :  data[column].mode()[0] for column in catogorical_column} 
+        mode_of_columns = {column :  data[column].mode()[0] for column in categorical_columns} 
         
         data = data.fillna(value=mode_of_columns)
 
@@ -35,7 +37,12 @@ class CustomDataset:
 
         data = data.fillna(value=median_of_columns)
 
-        print(data.isnull().sum())
+        # print(data.isnull().sum())
+
+        encoder = OrdinalEncoder(handle_unknown="use_encoded_value", unknown_value=-1)
+        data[categorical_columns] = encoder.fit_transform(data[categorical_columns])
+        print("Encoded categorical columns: ")
+        print(data.head())
         
 data = CustomDataset('./Mushroom_Classification/Dataset/train.csv')
 
