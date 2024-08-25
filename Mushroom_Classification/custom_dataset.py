@@ -1,3 +1,5 @@
+import pandas as pd
+
 class CustomDataset:
     def __init__(self, path):
         data = pd.read_csv(path)
@@ -19,3 +21,12 @@ class CustomDataset:
         data.drop(columns=columns_to_drop, inplace=True)
         print(f"Dropped columns with more than {null_percent * 100}% missing values: {columns_to_drop}")
         print("New shape after dropping columns: ", data.shape)
+
+        # split data by data type 
+        catogorical_column = [column for column in data.columns if data[column].dtype == 'object']
+        print(catogorical_column)
+
+        numeric_column = [column for column in data.columns if data[column].dtype == 'float64']
+        print(numeric_column)
+data = CustomDataset('./Mushroom_Classification/Dataset/train.csv')
+
