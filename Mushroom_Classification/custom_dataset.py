@@ -16,7 +16,7 @@ class CustomDataset:
         print("Dropped 'id' column. New shape: ", data.shape)
 
         # Drop columns with more than 80% missing data
-        null_percent = 0.80
+        null_percent = 0.90
         columns_to_drop = missing_data[missing_data > null_percent].index  # Identifies columns with > 80% missing values
         data.drop(columns=columns_to_drop, inplace=True)
         print(f"Dropped columns with more than {null_percent * 100}% missing values: {columns_to_drop}")
@@ -26,7 +26,16 @@ class CustomDataset:
         catogorical_column = [column for column in data.columns if data[column].dtype == 'object']
         print(catogorical_column)
 
+        mode_of_columns = {column :  data[column].mode()[0] for column in catogorical_column} 
+        
+        data = data.fillna(value=mode_of_columns)
+
         numeric_column = [column for column in data.columns if data[column].dtype == 'float64']
-        print(numeric_column)
+        median_of_columns = {column : data[column].median() for column in numeric_column}
+
+        data = data.fillna(value=median_of_columns)
+
+        print(data.isnull().sum())
+        
 data = CustomDataset('./Mushroom_Classification/Dataset/train.csv')
 
