@@ -60,5 +60,3 @@ class CustomDataset:
 
 
 
-data = CustomDataset('./Mushroom_Classification/Dataset/train.csv')
-
