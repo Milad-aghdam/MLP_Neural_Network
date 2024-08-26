@@ -1,6 +1,7 @@
 import pandas as pd
 from sklearn.preprocessing import OrdinalEncoder
-
+import torch
+from torch.utils.data import Dataset 
 
 class CustomDataset:
     def __init__(self, path):
@@ -10,8 +11,8 @@ class CustomDataset:
         # Check for missing data
         missing_data = data.isnull().mean()  # Calculates the percentage of missing values in each column
         print("Missing data (%): \n",  missing_data * 100)
-        print("Data info: ")
-        print(data.info())
+        # print("Data info: ")
+        # print(data.info())
 
         # Drop the 'id' column
         data = data.drop(columns='id', axis=1)
@@ -26,7 +27,7 @@ class CustomDataset:
 
         # split data by data type 
         categorical_columns = [column for column in data.columns if data[column].dtype == 'object']
-        print(categorical_columns)
+        # print(categorical_columns)
 
         mode_of_columns = {column :  data[column].mode()[0] for column in categorical_columns} 
         
@@ -41,8 +42,23 @@ class CustomDataset:
 
         encoder = OrdinalEncoder(handle_unknown="use_encoded_value", unknown_value=-1)
         data[categorical_columns] = encoder.fit_transform(data[categorical_columns])
-        print("Encoded categorical columns: ")
-        print(data.head())
         
+        # print(data['class'].value_counts())
+        # print(data.head(10))
+        self.X = data.drop('class').values
+        print(self.X.shape)
+        self.y = data['class'].values
+        print(self.y.shape)
+
+    def __len__(self):
+        return len(self.X)
+    
+    def __getitem__(self, idx):
+        feature = torch.tensor(self.X[idx], dtype=torch.float32)
+        target = torch.tensor(self.target[idx], dtype=torch.long)
+        return feature, target
+
+
+
 data = CustomDataset('./Mushroom_Classification/Dataset/train.csv')
 
