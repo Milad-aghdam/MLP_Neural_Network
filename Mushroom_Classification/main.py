@@ -5,6 +5,7 @@ import torch.optim as optim
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader, random_split
+import matplotlib.pyplot as plt
 
 # Set Hyperparameters
 input_size = 18
@@ -85,3 +86,29 @@ for epoch in range(num_epochs):
     print(f'Epoch [{epoch+1}/{num_epochs}], '
           f'Train Loss: {avg_train_loss:.4f}, Train Accuracy: {train_accuracy:.2f}%, '
           f'Val Loss: {avg_val_loss:.4f}, Val Accuracy: {val_accuracy:.2f}%')
+    
+epochs_range = range(1, num_epochs + 1)
+
+plt.figure(figsize=(12, 6))
+
+# Plotting the loss
+plt.subplot(1, 2, 1)
+plt.plot(epochs_range, train_losses, label='Training Loss')
+plt.plot(epochs_range, val_losses, label='Validation Loss')
+plt.xlabel('Epochs')
+plt.ylabel('Loss')
+plt.title('Training and Validation Loss')
+plt.legend()
+
+# Plotting the accuracy
+plt.subplot(1, 2, 2)
+plt.plot(epochs_range, train_accuracies, label='Training Accuracy')
+plt.plot(epochs_range, val_accuracies, label='Validation Accuracy')
+plt.xlabel('Epochs')
+plt.ylabel('Accuracy (%)')
+plt.title('Training and Validation Accuracy')
+plt.legend()
+
+# Show the plots
+plt.tight_layout()
+plt.show()
