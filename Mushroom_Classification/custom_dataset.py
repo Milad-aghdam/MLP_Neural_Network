@@ -45,7 +45,7 @@ class CustomDataset:
         
         # print(data['class'].value_counts())
         # print(data.head(10))
-        self.X = data.drop('class').values
+        self.X = data.drop('class', axis=1).values
         print(self.X.shape)
         self.y = data['class'].values
         print(self.y.shape)
@@ -55,7 +55,7 @@ class CustomDataset:
     
     def __getitem__(self, idx):
         feature = torch.tensor(self.X[idx], dtype=torch.float32)
-        target = torch.tensor(self.target[idx], dtype=torch.long)
+        target = torch.tensor(self.y[idx], dtype=torch.long)
         return feature, target
 
 

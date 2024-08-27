@@ -1,9 +1,9 @@
 from custom_dataset import CustomDataset
 from model import MLP
 
-import torch.optim
+import torch.optim as optim
 import torch
-import torch.nn
+import torch.nn as nn
 from torch.utils.data import DataLoader, random_split
 
 # Set Hyperparameters
@@ -22,18 +22,38 @@ val_size = len(data) - train_size  # Remaining 20% for validation
 
 train_dataset, val_dataset = random_split(data, [train_size, val_size])
 
-train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
-val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
+train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
 
 model = MLP(input_size, hidden_size, output_size)
 loss = nn.CrossEntropyLoss()
-optim = optim.Adam(model.paramas(), lr=learning_rate, momentum=0.9)
+optim = optim.Adam(model.parameters(), lr=learning_rate, )
 
-for epock in range(num_epochs):
-     model.train()
+train_accuracies = []
+train_loss = []
+for epoch in range(num_epochs):
+    model.train()
+    
+    running_loss = 0.0
+    correct = 0
+    total = 0
     for x_batch, y_batch in train_loader:
         y_hat = model(x_batch)
         loss_fn = loss(y_hat, y_batch)
         optim.zero_grad()
-        loss.backward()
+        loss_fn.backward()
         optim.step()
+        
+        running_loss += loss_fn.item() * x_batch.size(0)  # Multiply by batch size
+        _, predicted = torch.max(y_hat.data, 1)
+        total += y_batch.size(0)
+        correct += (predicted == y_batch).sum().item()
+
+    # Average loss and accuracy for the epoch
+    avg_train_loss = running_loss / len(train_loader.dataset)
+    train_accuracy = 100 * correct / total
+
+    train_loss.append(avg_train_loss)
+    train_accuracies.append(train_accuracy)
+    print(f'Epoch [{epoch+1}/{num_epochs}], '
+        f'Train Loss: {avg_train_loss:.4f}, Train Accuracy: {train_accuracy:.2f}%,')

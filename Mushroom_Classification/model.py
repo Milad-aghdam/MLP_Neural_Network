@@ -7,9 +7,9 @@ class MLP(nn.Module):
     def __init__(self, input_size, hiddin_size, output_size):
         super(MLP, self).__init__()
         
-        self.f1 = nn.Linear(input_size, hiddin_size)
-        self.f2 = nn.Linear(hiddin_size, hiddin_size)
-        self.f3 = nn.Linear(hiddin_size, output_size)
+        self.fc1 = nn.Linear(input_size, hiddin_size)
+        self.fc2 = nn.Linear(hiddin_size, hiddin_size)
+        self.fc3 = nn.Linear(hiddin_size, output_size)
 
     def forward(self, x):
         x = F.relu(self.fc1(x))
