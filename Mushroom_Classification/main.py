@@ -34,6 +34,7 @@ train_losses = []
 val_losses = []
 train_accuracies = []
 val_accuracies = []
+best_val_accuracy = 0.0
 
 # Training loop with validation
 for epoch in range(num_epochs):
@@ -66,7 +67,6 @@ for epoch in range(num_epochs):
     val_running_loss = 0.0
     val_correct = 0
     val_total = 0
-    best_val_accuracy = 0.0
 
     with torch.no_grad():  # Disable gradient computation
         for x_batch, y_batch in val_loader:
