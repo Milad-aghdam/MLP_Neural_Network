@@ -22,5 +22,18 @@ val_size = len(data) - train_size  # Remaining 20% for validation
 
 train_dataset, val_dataset = random_split(data, [train_size, val_size])
 
-rain_loader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
 val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
+
+model = MLP(input_size, hidden_size, output_size)
+loss = nn.CrossEntropyLoss()
+optim = optim.Adam(model.paramas(), lr=learning_rate, momentum=0.9)
+
+for epock in range(num_epochs):
+     model.train()
+    for x_batch, y_batch in train_loader:
+        y_hat = model(x_batch)
+        loss_fn = loss(y_hat, y_batch)
+        optim.zero_grad()
+        loss.backward()
+        optim.step()
