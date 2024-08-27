@@ -66,7 +66,8 @@ for epoch in range(num_epochs):
     val_running_loss = 0.0
     val_correct = 0
     val_total = 0
-    
+    best_val_accuracy = 0.0
+
     with torch.no_grad():  # Disable gradient computation
         for x_batch, y_batch in val_loader:
             y_hat = model(x_batch)
@@ -88,10 +89,11 @@ for epoch in range(num_epochs):
           f'Val Loss: {avg_val_loss:.4f}, Val Accuracy: {val_accuracy:.2f}%')
 
 
-torch.save(model.state_dict(), 'Mushroom_Classification/mlp_model.pth')
-
-# You can optionally print a message to confirm that the model has been saved
-print("Model saved as mlp_model.pth")
+   # Save the best model
+    if val_accuracy > best_val_accuracy:
+        best_val_accuracy = val_accuracy
+        torch.save(model.state_dict(), 'best_mlp_model.pth')
+        print(f"New best model saved with validation accuracy: {best_val_accuracy:.2f}%")
 epochs_range = range(1, num_epochs + 1)
 
 plt.figure(figsize=(12, 6))
