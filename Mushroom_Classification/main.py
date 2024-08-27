@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 input_size = 18
 hidden_size = 64
 output_size = 2
-learning_rate = 0.01
+learning_rate = 0.001
 batch_size = 256
 num_epochs = 20
 
@@ -86,7 +86,12 @@ for epoch in range(num_epochs):
     print(f'Epoch [{epoch+1}/{num_epochs}], '
           f'Train Loss: {avg_train_loss:.4f}, Train Accuracy: {train_accuracy:.2f}%, '
           f'Val Loss: {avg_val_loss:.4f}, Val Accuracy: {val_accuracy:.2f}%')
-    
+
+
+torch.save(model.state_dict(), 'Mushroom_Classification/mlp_model.pth')
+
+# You can optionally print a message to confirm that the model has been saved
+print("Model saved as mlp_model.pth")
 epochs_range = range(1, num_epochs + 1)
 
 plt.figure(figsize=(12, 6))
