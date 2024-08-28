@@ -1,8 +1,11 @@
 import pandas as pd
 from sklearn.preprocessing import OrdinalEncoder
 import torch
+import pickle
+
 from custom_dataset import CustomDataset
 from model import MLP
+
 
 # Step 1: Load the Test Data
 test_data = pd.read_csv('./Mushroom_Classification/Dataset/test.csv')
@@ -32,7 +35,9 @@ median_of_columns = {column: test_data[column].median() for column in numeric_co
 test_data.fillna(value=median_of_columns, inplace=True)
 
 # Encode categorical variables (using the encoder fitted on training data)
-encoder = OrdinalEncoder(handle_unknown="use_encoded_value", unknown_value=-1)
+with open('./Mushroom_Classification/encoder.pkl', 'rb') as f:
+    encoder = pickle.load(f)
+
 test_data[categorical_columns] = encoder.transform(test_data[categorical_columns])
 
 # Convert test data to a tensor
@@ -44,7 +49,7 @@ hidden_size = 64  # Same as used during training
 output_size = 2   # Assuming binary classification (editable 'e' or poisonous 'p')
 
 model = MLP(input_size, hidden_size, output_size)
-model.load_state_dict(torch.load('best_mlp_model.pth'))
+model.load_state_dict(torch.load('./Mushroom_Classification/best_mlp_model.pth'))
 model.eval()  # Set the model to evaluation mode
 
 # Step 4: Make Predictions
@@ -67,3 +72,4 @@ submission = pd.DataFrame({
 submission.to_csv('submission.csv', index=False)
 
 print("Submission file created: submission.csv")
+['veil-type', 'spore-print-color']

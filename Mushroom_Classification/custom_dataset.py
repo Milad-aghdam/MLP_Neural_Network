@@ -27,29 +27,25 @@ class CustomDataset:
         print("New shape after dropping columns: ", data.shape)
 
         # split data by data type 
-        categorical_columns = [column for column in data.columns if data[column].dtype == 'object']
+        categorical_columns = [column for column in data.columns if column != 'class' and data[column].dtype == 'object']
         # print(categorical_columns)
-
         mode_of_columns = {column :  data[column].mode()[0] for column in categorical_columns} 
-        
         data = data.fillna(value=mode_of_columns)
 
         numeric_column = [column for column in data.columns if data[column].dtype == 'float64']
         median_of_columns = {column : data[column].median() for column in numeric_column}
-
         data = data.fillna(value=median_of_columns)
-
         # print(data.isnull().sum())
 
         encoder = OrdinalEncoder(handle_unknown="use_encoded_value", unknown_value=-1)
         data[categorical_columns] = encoder.fit_transform(data[categorical_columns])
-        with open('encoder.pkl', 'wb') as f:
+        with open('./Mushroom_Classification/encoder.pkl', 'wb') as f:
             pickle.dump(encoder, f)
         # print(data['class'].value_counts())
         # print(data.head(10))
         self.X = data.drop('class', axis=1).values
         print(self.X.shape)
-        self.y = data['class'].values
+        self.y = torch.tensor(data['class'].map({'e': 0, 'p': 1}).values, dtype=torch.long)
         print(self.y.shape)
 
     def __len__(self):
@@ -59,6 +55,3 @@ class CustomDataset:
         feature = torch.tensor(self.X[idx], dtype=torch.float32)
         target = torch.tensor(self.y[idx], dtype=torch.long)
         return feature, target
-
-
-
