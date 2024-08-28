@@ -2,6 +2,7 @@ import pandas as pd
 from sklearn.preprocessing import OrdinalEncoder
 import torch
 from torch.utils.data import Dataset 
+import pickle
 
 class CustomDataset:
     def __init__(self, path):
@@ -42,7 +43,8 @@ class CustomDataset:
 
         encoder = OrdinalEncoder(handle_unknown="use_encoded_value", unknown_value=-1)
         data[categorical_columns] = encoder.fit_transform(data[categorical_columns])
-        
+        with open('encoder.pkl', 'wb') as f:
+            pickle.dump(encoder, f)
         # print(data['class'].value_counts())
         # print(data.head(10))
         self.X = data.drop('class', axis=1).values

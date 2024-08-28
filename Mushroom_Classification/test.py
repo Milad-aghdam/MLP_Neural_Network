@@ -1,4 +1,5 @@
 import pandas as pd
+from sklearn.preprocessing import OrdinalEncoder
 import torch
 from custom_dataset import CustomDataset
 from model import MLP
@@ -14,6 +15,14 @@ test_ids = test_data['id']
 test_data = test_data.drop(columns=['id'], axis=1)
 
 # Handle missing values (same as in the training data)
+missing_data = test_data.isnull().mean()  # Calculates the percentage of missing values in each column
+print("Missing data (%): \n",  missing_data * 100)
+null_percent = 0.90
+columns_to_drop = missing_data[missing_data > null_percent].index  # Identifies columns with > 80% missing values
+test_data.drop(columns=columns_to_drop, inplace=True)
+print(f"Dropped columns with more than {null_percent * 100}% missing values: {columns_to_drop}")
+print("New shape after dropping columns: ", test_data.shape)
+
 categorical_columns = [column for column in test_data.columns if test_data[column].dtype == 'object']
 mode_of_columns = {column: test_data[column].mode()[0] for column in categorical_columns}
 test_data.fillna(value=mode_of_columns, inplace=True)
@@ -35,7 +44,7 @@ hidden_size = 64  # Same as used during training
 output_size = 2   # Assuming binary classification (editable 'e' or poisonous 'p')
 
 model = MLP(input_size, hidden_size, output_size)
-model.load_state_dict(torch.load('mlp_model.pth'))
+model.load_state_dict(torch.load('best_mlp_model.pth'))
 model.eval()  # Set the model to evaluation mode
 
 # Step 4: Make Predictions
